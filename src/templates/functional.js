@@ -1,9 +1,10 @@
 import { FC } from 'react';
 
-type Props = {
+type COMPONENT_NAMEProps = {
+  
 }
 
-const COMPONENT_NAME : FC<Props> = () => {
+const COMPONENT_NAME : FC<COMPONENT_NAMEProps> = () => {
   return <div />;
 };
 
