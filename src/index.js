@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 const fs = require('fs');
 const path = require('path');
+const kebabCase = require('lodash/kebabcase');
 
 const program = require('commander');
 
@@ -54,11 +55,14 @@ program
 const [componentName] = program.args;
 
 // Find the path to the selected template file.
-const templatePath = `./templates/${program.type}.js`;
+const componentTemplatePath = `./templates/${program.type}.tsx`;
+
+const storyTemplatePath = `./templates/stories.tsx`;
 
 // Get all of our file paths worked out, for the user's project.
-const componentDir = `${program.dir}/${componentName}`;
+const componentDir = `${program.dir}/${kebabCase(componentName)}`;
 const filePath = `${componentDir}/${componentName}.${program.extension}`;
+const storyPath = `${componentDir}/${componentName}.stories.${program.extension}`;
 const indexPath = `${componentDir}/index.${program.extension}`;
 
 // Our index template is super straightforward, so we'll just inline it for now.
@@ -97,7 +101,7 @@ if (fs.existsSync(fullPathToComponentDir)) {
 
 // Start by creating the directory that our component lives in.
 mkDirPromise(componentDir)
-  .then(() => readFilePromiseRelative(templatePath))
+  .then(() => readFilePromiseRelative(componentTemplatePath))
   .then((template) => {
     logItemCompletion('Directory created.');
     return template;
@@ -114,15 +118,23 @@ mkDirPromise(componentDir)
     logItemCompletion('Component built and saved to disk.');
     return template;
   })
-  .then((template) =>
+  .then(() =>
     // We also need the `index.js` file, which allows easy importing.
     writeFilePromise(indexPath, prettify(indexTemplate))
   )
-  .then((template) => {
+  .then(() => {
     logItemCompletion('Index file built and saved to disk.');
-    return template;
   })
-  .then((template) => {
+  .then(() => readFilePromiseRelative(storyTemplatePath))
+  .then((storyTemplate) =>  storyTemplate.replace(/COMPONENT_NAME/g, componentName)  
+  ).then((storyTemplate) =>
+    // Format it using prettier, to ensure style consistency, and write to file.
+    writeFilePromise(storyPath, storyTemplate)
+  )
+  .then(() => {
+    logItemCompletion('Stories built and saved to disk.');
+  })
+  .then(() => {
     logConclusion();
   })
   .catch((err) => {
